@@ -5,28 +5,54 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.CollectionListModel
+import com.intellij.ui.LanguageTextField
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.SimpleColoredComponent
+import com.intellij.ui.SimpleListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
-import com.intellij.ui.LanguageTextField
 import com.intellij.ui.components.JBList
 import com.intellij.ui.speedSearch.ListWithFilter
-import com.intellij.sql.psi.SqlLanguage
 import com.intellij.ui.speedSearch.SpeedSearchSupply
+import com.intellij.sql.psi.SqlLanguage
 import com.intellij.util.Function
+import java.awt.BorderLayout
 import java.awt.Dimension
+import java.awt.FlowLayout
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
 import javax.swing.JSplitPane
 import javax.swing.ListSelectionModel
 import javax.swing.SwingUtilities
 import javax.swing.UIManager
+
+private enum class DateRange(val label: String) {
+    TODAY("Today"),
+    WEEK("Last 7 days"),
+    MONTH("Last 30 days"),
+    ALL("All time");
+
+    fun matches(ts: Long): Boolean {
+        if (ts <= QueryTimestampService.IMPORTED_TS) return this == ALL
+        val cutoff = when (this) {
+            TODAY -> LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            WEEK  -> Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli()
+            MONTH -> Instant.now().minus(30, ChronoUnit.DAYS).toEpochMilli()
+            ALL   -> 0L
+        }
+        return ts >= cutoff
+    }
+}
 
 class QueryHistoryBrowseAction : AnAction() {
 
@@ -60,7 +86,8 @@ private class QueryHistoryDialog(
 ) : DialogWrapper(project, true) {
 
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-    private val model = CollectionListModel(entries)
+    private val allEntries: MutableList<Pair<String, Long>> = entries.toMutableList()
+    private val model = CollectionListModel(allEntries)
     private val list = JBList(model).apply {
         selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
         setCellRenderer { _, value, _, isSelected, cellHasFocus ->
@@ -89,6 +116,10 @@ private class QueryHistoryDialog(
         init()
     }
 
+    private fun applyDateFilter(range: DateRange) {
+        model.replaceAll(allEntries.filter { (_, ts) -> range.matches(ts) })
+    }
+
     override fun createCenterPanel(): JComponent {
         val preview = LanguageTextField(SqlLanguage.INSTANCE, project, "", false).apply {
             setViewer(true)
@@ -101,12 +132,12 @@ private class QueryHistoryDialog(
         list.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 if (e.keyCode != KeyEvent.VK_DELETE) return
-                // If speed search filter is active, let it handle the key (backspace clears chars)
                 if (SpeedSearchSupply.getSupply(list)?.isPopupActive == true) return
                 val selected = list.selectedValuesList.toList()
                 if (selected.isEmpty()) return
                 selected.forEach { entry ->
                     onRemove(entry.first)
+                    allEntries.remove(entry)
                     model.remove(entry)
                 }
                 e.consume()
@@ -130,8 +161,23 @@ private class QueryHistoryDialog(
         }
         SwingUtilities.invokeLater { splitPane.setDividerLocation(0.6) }
 
-        splitPane.preferredSize = Dimension(700, 500)
-        return splitPane
+        val dateFilter = ComboBox(DateRange.entries.toTypedArray()).apply {
+            renderer = SimpleListCellRenderer.create("") { it.label }
+            selectedItem = DateRange.ALL
+            addActionListener { applyDateFilter(selectedItem as DateRange) }
+        }
+
+        val topBar = JPanel(FlowLayout(FlowLayout.LEFT, 8, 4)).apply {
+            add(JLabel("Date:"))
+            add(dateFilter)
+        }
+
+        val content = JPanel(BorderLayout()).apply {
+            add(topBar, BorderLayout.NORTH)
+            add(splitPane, BorderLayout.CENTER)
+        }
+        content.preferredSize = Dimension(700, 540)
+        return content
     }
 
     override fun getDimensionServiceKey() = "QueryHistoryDialog"

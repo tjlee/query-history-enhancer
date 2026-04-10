@@ -9,6 +9,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.github.tjlee.queryhistoryenhancer.QueryTimestampService"/>
+        <postStartupActivity implementation="com.github.tjlee.queryhistoryenhancer.QueryHistoryImportActivity"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij.database">

@@ -12,13 +12,15 @@ import com.intellij.openapi.project.Project
 class QueryTimestampService : PersistentStateComponent<QueryTimestampService.State> {
 
     companion object {
-        private const val MAX_SIZE = 200
+        private const val MAX_SIZE = 1000
+        const val IMPORTED_TS = 1L
 
         fun getInstance(project: Project): QueryTimestampService = project.service()
     }
 
     class State {
         var entries: LinkedHashMap<String, Long> = LinkedHashMap()
+        var hasImportedPlatformHistory: Boolean = false
     }
 
     private var myState = State()
@@ -35,6 +37,17 @@ class QueryTimestampService : PersistentStateComponent<QueryTimestampService.Sta
             myState.entries.remove(myState.entries.keys.first())
         }
         myState.entries[query] = System.currentTimeMillis()
+    }
+
+    fun recordImported(query: String) {
+        if (myState.entries.containsKey(query)) return  // keep real timestamp if already recorded
+        if (myState.entries.size >= MAX_SIZE) {
+            // only evict other imported placeholders, never real timestamped entries
+            val oldest = myState.entries.entries.firstOrNull()
+            if (oldest == null || oldest.value > IMPORTED_TS) return
+            myState.entries.remove(oldest.key)
+        }
+        myState.entries[query] = IMPORTED_TS
     }
 
     fun entries(): List<Pair<String, Long>> =

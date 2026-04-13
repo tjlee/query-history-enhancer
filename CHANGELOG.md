@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-04-13
+### Fixed
+- Multi-select delete now correctly removes all selected entries in one batch
+- Delete key on macOS (⌫ / Backspace) now works in addition to the forward-delete key
+
+### Added
+- Right-click context menu on the history list with a Delete option
+
 ## [0.0.1] - 2026-04-13
 ### Added
 - Timestamps for every executed SQL query, persisted per project

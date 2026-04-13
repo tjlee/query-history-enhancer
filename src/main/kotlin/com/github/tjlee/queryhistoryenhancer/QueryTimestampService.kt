@@ -7,6 +7,8 @@ import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 
+data class QueryEntry(val query: String, val ts: Long, val source: String)
+
 @Service(Service.Level.PROJECT)
 @State(name = "QueryTimestampService", storages = [Storage("queryTimestamps.xml")])
 class QueryTimestampService : PersistentStateComponent<QueryTimestampService.State> {
@@ -20,6 +22,7 @@ class QueryTimestampService : PersistentStateComponent<QueryTimestampService.Sta
 
     class State {
         var entries: LinkedHashMap<String, Long> = LinkedHashMap()
+        var sources: LinkedHashMap<String, String> = LinkedHashMap()
         var hasImportedPlatformHistory: Boolean = false
     }
 
@@ -31,12 +34,15 @@ class QueryTimestampService : PersistentStateComponent<QueryTimestampService.Sta
         myState = state
     }
 
-    fun record(query: String) {
+    fun record(query: String, source: String = "") {
         val alreadyPresent = myState.entries.remove(query) != null
         if (!alreadyPresent && myState.entries.size >= MAX_SIZE) {
-            myState.entries.remove(myState.entries.keys.first())
+            val evicted = myState.entries.keys.first()
+            myState.entries.remove(evicted)
+            myState.sources.remove(evicted)
         }
         myState.entries[query] = System.currentTimeMillis()
+        myState.sources[query] = source
     }
 
     fun recordImported(query: String) {
@@ -46,14 +52,19 @@ class QueryTimestampService : PersistentStateComponent<QueryTimestampService.Sta
             val oldest = myState.entries.entries.firstOrNull()
             if (oldest == null || oldest.value > IMPORTED_TS) return
             myState.entries.remove(oldest.key)
+            myState.sources.remove(oldest.key)
         }
         myState.entries[query] = IMPORTED_TS
+        myState.sources[query] = ""
     }
 
-    fun entries(): List<Pair<String, Long>> =
-        myState.entries.entries.map { it.key to it.value }.reversed()
+    fun entries(): List<QueryEntry> =
+        myState.entries.entries.reversed().map { (query, ts) ->
+            QueryEntry(query, ts, myState.sources[query] ?: "")
+        }
 
     fun remove(query: String) {
         myState.entries.remove(query)
+        myState.sources.remove(query)
     }
 }

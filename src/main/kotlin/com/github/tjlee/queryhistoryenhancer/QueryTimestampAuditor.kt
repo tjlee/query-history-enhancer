@@ -11,6 +11,7 @@ class QueryTimestampAuditor : DataAuditor {
         if (request !is ConsoleDataRequest) return
         val query = request.query?.trim()?.takeIf { it.isNotEmpty() } ?: return
         val project = request.console.project
-        QueryTimestampService.getInstance(project).record(query)
+        val source = runCatching { request.console.dataSource.name }.getOrDefault("")
+        QueryTimestampService.getInstance(project).record(query, source)
     }
 }

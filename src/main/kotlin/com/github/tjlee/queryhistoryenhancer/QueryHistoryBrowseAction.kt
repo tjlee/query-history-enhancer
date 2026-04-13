@@ -66,7 +66,7 @@ class QueryHistoryBrowseAction : AnAction() {
 
         val dialog = QueryHistoryDialog(project, entries, service::remove)
         if (dialog.showAndGet()) {
-            val rawQuery = dialog.selectedEntries.joinToString("\n") { it.first }
+            val rawQuery = dialog.selectedEntries.joinToString("\n") { it.query }
             WriteCommandAction.writeCommandAction(project).run<Throwable> {
                 editor.document.setText(rawQuery)
                 editor.caretModel.moveToOffset(editor.document.textLength)
@@ -81,23 +81,24 @@ class QueryHistoryBrowseAction : AnAction() {
 
 private class QueryHistoryDialog(
     private val project: Project,
-    entries: List<Pair<String, Long>>,
+    entries: List<QueryEntry>,
     private val onRemove: (String) -> Unit
 ) : DialogWrapper(project, true) {
 
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-    private val allEntries: MutableList<Pair<String, Long>> = entries.toMutableList()
+    private val allEntries: MutableList<QueryEntry> = entries.toMutableList()
     private val model = CollectionListModel(allEntries)
     private val list = JBList(model).apply {
         selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
-        setCellRenderer { _, value, _, isSelected, cellHasFocus ->
+        setCellRenderer { _, entry, _, isSelected, cellHasFocus ->
             SimpleColoredComponent().also { c ->
-                val (query, ts) = value
-                val timeLabel = if (ts <= QueryTimestampService.IMPORTED_TS) "imported"
-                                else formatter.format(Instant.ofEpochMilli(ts).atZone(ZoneId.systemDefault()))
-                val firstLine = query.lines().first().trim()
-                c.append("[$timeLabel] ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
-                c.append(firstLine)
+                val timeLabel = if (entry.ts <= QueryTimestampService.IMPORTED_TS) "imported"
+                                else formatter.format(Instant.ofEpochMilli(entry.ts).atZone(ZoneId.systemDefault()))
+                c.append("[$timeLabel]", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                if (entry.source.isNotEmpty()) {
+                    c.append(" [${entry.source}]", SimpleTextAttributes.GRAYED_BOLD_ATTRIBUTES)
+                }
+                c.append(" ${entry.query.lines().first().trim()}")
                 if (isSelected) {
                     c.background = UIManager.getColor(
                         if (cellHasFocus) "List.selectionBackground" else "List.selectionInactiveBackground"
@@ -108,7 +109,7 @@ private class QueryHistoryDialog(
         }
     }
 
-    val selectedEntries: List<Pair<String, Long>>
+    val selectedEntries: List<QueryEntry>
         get() = list.selectedValuesList
 
     init {
@@ -117,7 +118,7 @@ private class QueryHistoryDialog(
     }
 
     private fun applyDateFilter(range: DateRange) {
-        model.replaceAll(allEntries.filter { (_, ts) -> range.matches(ts) })
+        model.replaceAll(allEntries.filter { range.matches(it.ts) })
     }
 
     override fun createCenterPanel(): JComponent {
@@ -126,7 +127,7 @@ private class QueryHistoryDialog(
         }
 
         list.addListSelectionListener {
-            preview.text = list.selectedValue?.first ?: ""
+            preview.text = list.selectedValue?.query ?: ""
         }
 
         list.addKeyListener(object : KeyAdapter() {
@@ -136,7 +137,7 @@ private class QueryHistoryDialog(
                 val selected = list.selectedValuesList.toList()
                 if (selected.isEmpty()) return
                 selected.forEach { entry ->
-                    onRemove(entry.first)
+                    onRemove(entry.query)
                     allEntries.remove(entry)
                     model.remove(entry)
                 }
@@ -147,10 +148,10 @@ private class QueryHistoryDialog(
         val listWithFilter = ListWithFilter.wrap(
             list,
             ScrollPaneFactory.createScrollPane(list),
-            Function<Pair<String, Long>, String> { (query, ts) ->
-                val timeLabel = if (ts <= QueryTimestampService.IMPORTED_TS) "imported"
-                                else formatter.format(Instant.ofEpochMilli(ts).atZone(ZoneId.systemDefault()))
-                "[$timeLabel] ${query.lines().first().trim()}"
+            Function<QueryEntry, String> { entry ->
+                val timeLabel = if (entry.ts <= QueryTimestampService.IMPORTED_TS) "imported"
+                                else formatter.format(Instant.ofEpochMilli(entry.ts).atZone(ZoneId.systemDefault()))
+                "[$timeLabel] [${entry.source}] ${entry.query.lines().first().trim()}"
             }
         )
 

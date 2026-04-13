@@ -1,8 +1,28 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.tjlee.queryhistoryenhancer</id>
-    <name>query-history-enhancer</name>
-    <vendor>tjlee</vendor>
+    <name>Query History Enhancer</name>
+    <vendor url="https://github.com/tjlee/query-history-enhancer">tjlee</vendor>
+
+    <description><![CDATA[
+        Enhances the built-in database console query history in DataGrip and IntelliJ IDEA Database Tools.
+
+        <h3>Features</h3>
+        <ul>
+            <li><b>Timestamps</b> — every executed query is recorded with the exact time it ran.</li>
+            <li><b>Cross-console history</b> — queries from all database consoles are merged into a single unified history, per project.</li>
+            <li><b>Connection source labels</b> — each entry shows which data source the query was run against.</li>
+            <li><b>Date range filter</b> — quickly narrow the list to Today, Last 7 days, Last 30 days, or All time.</li>
+            <li><b>Speed search</b> — type anywhere in the history dialog to filter by query text, timestamp, or connection name.</li>
+            <li><b>SQL preview pane</b> — selecting an entry shows the full query with SQL syntax highlighting.</li>
+            <li><b>Multi-select &amp; delete</b> — select multiple entries and press Delete to remove them from history.</li>
+            <li><b>History import</b> — existing platform query history is imported on first run so no history is lost.</li>
+        </ul>
+
+        <h3>Usage</h3>
+        <p>Open a database console and invoke <b>View &gt; Recent SQL Statements</b> (or the toolbar history button).
+        The enhanced history dialog replaces the default one.</p>
+    ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.database</depends>

@@ -1,0 +1,21 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#59A869"/>
+      <stop offset="1" stop-color="#208A3C"/>
+    </linearGradient>
+  </defs>
+  <rect width="40" height="40" rx="8" fill="url(#bg)"/>
+  <!-- Main clock circle -->
+  <circle cx="20" cy="20" r="13" fill="white"/>
+  <circle cx="20" cy="20" r="13" stroke="#59A869" strokeWidth="2"/>
+  <!-- Clock hands -->
+  <line x1="20" y1="20" x2="20" y2="12" stroke="#208A3C" strokeWidth="2.5" strokeLinecap="round"/>
+  <line x1="20" y1="20" x2="26" y2="20" stroke="#208A3C" strokeWidth="2.5" strokeLinecap="round"/>
+  <circle cx="20" cy="20" r="1.5" fill="#208A3C"/>
+  <!-- List badge in corner -->
+  <rect x="27" y="27" width="10" height="10" rx="2" fill="#59A869"/>
+  <line x1="29" y1="30" x2="35" y2="30" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+  <line x1="29" y1="32.5" x2="35" y2="32.5" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+  <line x1="29" y1="35" x2="35" y2="35" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+</svg>

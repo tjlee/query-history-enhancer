@@ -1,35 +1,30 @@
-# query-history-enhancer
+# Query History Enhancer
 
 ![Build](https://github.com/tjlee/query-history-enhancer/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
-## Template ToDo list
-- [x] Create a new [IntelliJ Platform Plugin Template][template] project.
-- [ ] Get familiar with the [template documentation][template].
-- [ ] Adjust the [pluginGroup](./gradle.properties) and [pluginName](./gradle.properties), as well as the [id](./src/main/resources/META-INF/plugin.xml) and [sources package](./src/main/kotlin).
-- [ ] Adjust the plugin description in `README` (see [Tips][docs:plugin-description])
-- [ ] Review the [Legal Agreements](https://plugins.jetbrains.com/docs/marketplace/legal-agreements.html?from=IJPluginTemplate).
-- [ ] [Publish a plugin manually](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate) for the first time.
-- [ ] Set the `MARKETPLACE_ID` in the above README badges. You can obtain it once the plugin is published to JetBrains Marketplace.
-- [ ] Set the [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html?from=IJPluginTemplate) related [secrets](https://github.com/JetBrains/intellij-platform-plugin-template#environment-variables).
-- [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html?from=IJPluginTemplate).
-- [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
-- [ ] Configure the [CODECOV_TOKEN](https://docs.codecov.com/docs/quick-start) secret for automated test coverage reports on PRs
-
 <!-- Plugin description -->
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
+Enhances the built-in database console query history in DataGrip and IntelliJ IDEA Database Tools.
 
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
+**Features:**
+- **Timestamps** — every executed query is recorded with the exact time it ran.
+- **Cross-console history** — queries from all database consoles are merged into a single unified history, per project.
+- **Connection source labels** — each entry shows which data source the query was run against.
+- **Date range filter** — quickly narrow the list to Today, Last 7 days, Last 30 days, or All time.
+- **Speed search** — type anywhere in the history dialog to filter by query text, timestamp, or connection name.
+- **SQL preview pane** — selecting an entry shows the full query with SQL syntax highlighting.
+- **Multi-select & delete** — select multiple entries and press Delete to remove them from history.
+- **History import** — existing platform query history is imported on first run so no history is lost.
 
-To keep everything working, do not remove `<!-- ... -->` sections. 
+**Usage:** Open a database console and invoke **View > Recent SQL Statements** (or the toolbar history button). The enhanced history dialog replaces the default one.
 <!-- Plugin description end -->
 
 ## Installation
 
 - Using the IDE built-in plugin system:
 
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "query-history-enhancer"</kbd> >
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Query History Enhancer"</kbd> >
   <kbd>Install</kbd>
 
 - Using JetBrains Marketplace:

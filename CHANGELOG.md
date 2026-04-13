@@ -1,7 +1,16 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# query-history-enhancer Changelog
+# Query History Enhancer Changelog
 
 ## [Unreleased]
+
+## [0.0.1] - 2026-04-13
 ### Added
-- Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
+- Timestamps for every executed SQL query, persisted per project
+- Unified cross-console history — queries from all database consoles merged into one list
+- Connection source labels — each history entry shows which data source it was run against
+- Date range filter (Today / Last 7 days / Last 30 days / All time)
+- Speed search — filter history by query text, timestamp, or connection name
+- SQL syntax-highlighted preview pane below the history list
+- Multi-select and Delete key support for removing history entries
+- One-time import of existing platform query history on first run

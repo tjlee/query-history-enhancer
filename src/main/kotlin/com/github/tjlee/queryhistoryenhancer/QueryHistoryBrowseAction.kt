@@ -23,6 +23,11 @@ import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import javax.swing.JMenuItem
+import javax.swing.JPopupMenu
+import javax.swing.KeyStroke
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -117,8 +122,21 @@ private class QueryHistoryDialog(
         init()
     }
 
+    private var currentRange = DateRange.ALL
+
     private fun applyDateFilter(range: DateRange) {
+        currentRange = range
         model.replaceAll(allEntries.filter { range.matches(it.ts) })
+    }
+
+    private fun deleteSelected() {
+        val selected = list.selectedValuesList.toList()
+        if (selected.isEmpty()) return
+        selected.forEach { entry ->
+            onRemove(entry.query)
+            allEntries.remove(entry)
+        }
+        applyDateFilter(currentRange)
     }
 
     override fun createCenterPanel(): JComponent {
@@ -132,16 +150,34 @@ private class QueryHistoryDialog(
 
         list.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode != KeyEvent.VK_DELETE) return
+                if (e.keyCode != KeyEvent.VK_DELETE && e.keyCode != KeyEvent.VK_BACK_SPACE) return
                 if (SpeedSearchSupply.getSupply(list)?.isPopupActive == true) return
-                val selected = list.selectedValuesList.toList()
-                if (selected.isEmpty()) return
-                selected.forEach { entry ->
-                    onRemove(entry.query)
-                    allEntries.remove(entry)
-                    model.remove(entry)
-                }
+                deleteSelected()
                 e.consume()
+            }
+        })
+
+        val popupMenu = JPopupMenu()
+        val deleteItem = JMenuItem("Delete").apply {
+            val isMac = System.getProperty("os.name").lowercase().contains("mac")
+            accelerator = if (isMac) KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0)
+                          else KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0)
+            addActionListener { deleteSelected() }
+        }
+        popupMenu.add(deleteItem)
+
+        list.addMouseListener(object : MouseAdapter() {
+            override fun mousePressed(e: MouseEvent) = maybeShowPopup(e)
+            override fun mouseReleased(e: MouseEvent) = maybeShowPopup(e)
+
+            private fun maybeShowPopup(e: MouseEvent) {
+                if (!e.isPopupTrigger) return
+                val clickedIndex = list.locationToIndex(e.point)
+                if (clickedIndex >= 0 && !list.isSelectedIndex(clickedIndex)) {
+                    list.selectedIndex = clickedIndex
+                }
+                deleteItem.isEnabled = !list.isSelectionEmpty
+                popupMenu.show(list, e.x, e.y)
             }
         })
 
